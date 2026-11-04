@@ -11,7 +11,7 @@ Research index: [`indexing/README.md`](indexing/README.md).
 ## Boundaries
 
 - Research only: units describe the zip at its pin and cite `navier/path:a-b`; no unit prescribes code (that starts in [Phase 1](../phase-1/README.md)).
-- DBOS facts are `[S]` only when cited in the installed SDK (`dbos/...`), `[Doc]` when read on docs.dbos.dev 2026-11-04, else `[U]`.
+- DBOS facts are `[S]` only when cited in the installed SDK (tree `dbos`), `[Doc]` when read on docs.dbos.dev 2026-11-04, else `[U]`.
 - Owner decisions in `factory/profile/navier_dbos/requirements.md` are inputs, not findings to reopen.
 
 | File | Role |

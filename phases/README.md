@@ -7,6 +7,7 @@ This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every ph
 | Phase | Name | Objective | Units |
 |-------|------|-----------|-------|
 | [phase-0](phase-0/README.md) | Research and map | Map how one Navier turn runs today, what Temporal provides, what each piece of surrounding machinery is for, how DBOS covers each need, and give every piece a keep / replace-by-DBOS / delete / simplify verdict. | P0.1, P0.2, P0.3, P0.4 |
+| [phase-1](phase-1/README.md) | Runner seam | Put one small `TurnRunner` interface between Navier's domain code and the runner, move every Temporal-specific file behind it unchanged and frozen, and prove both runners with one shared conformance harness. | P1.1, P1.2, P1.3, P1.4, P1.5 |
 
 ## Where the owner goals live
 
@@ -29,6 +30,11 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 | P0.2 | [Temporal inventory and what the machinery around it is for](phase-0/PHASE0_P0.2_TEMPORAL_INVENTORY.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-0/PHASE0_P0.2_TEMPORAL_INVENTORY_PROGRAM.md) | 1 / ready | [2](phase-0/PHASE0_P0.2_TEMPORAL_INVENTORY_TICKETS.md) |
 | P0.3 | [DBOS fit: each need mapped to a DBOS 5.4.0 API](phase-0/PHASE0_P0.3_DBOS_FIT.md) | BINDING through pass 3 | 3 / ready | [BINDING through pass 1](phase-0/PHASE0_P0.3_DBOS_FIT_PROGRAM.md) | 1 / ready | [2](phase-0/PHASE0_P0.3_DBOS_FIT_TICKETS.md) |
 | P0.4 | [Simplification audit of the machinery around the turn workflow](phase-0/PHASE0_P0.4_SIMPLIFICATION_AUDIT.md) | BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04 | 3 / not-ready | [BINDING through pass 1](phase-0/PHASE0_P0.4_SIMPLIFICATION_AUDIT_PROGRAM.md) | 1 / ready | [2](phase-0/PHASE0_P0.4_SIMPLIFICATION_AUDIT_TICKETS.md) |
+| P1.1 | [Runner interface and runner-neutral steps](phase-1/PHASE1_P1.1_RUNNER_INTERFACE.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-1/PHASE1_P1.1_RUNNER_INTERFACE_PROGRAM.md) | 1 / ready | [4](phase-1/PHASE1_P1.1_RUNNER_INTERFACE_TICKETS.md) |
+| P1.2 | [Port every runner call site to the interface](phase-1/PHASE1_P1.2_OPERATIONS_PORT.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-1/PHASE1_P1.2_OPERATIONS_PORT_PROGRAM.md) | 2 / ready | [4](phase-1/PHASE1_P1.2_OPERATIONS_PORT_TICKETS.md) |
+| P1.3 | [Temporal as a frozen adapter](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 3](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE_PROGRAM.md) | 3 / ready | [4](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE_TICKETS.md) |
+| P1.4 | [Runner configuration and selection](phase-1/PHASE1_P1.4_RUNNER_CONFIG.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 1](phase-1/PHASE1_P1.4_RUNNER_CONFIG_PROGRAM.md) | 1 / ready | [2](phase-1/PHASE1_P1.4_RUNNER_CONFIG_TICKETS.md) |
+| P1.5 | [Shared runner conformance harness](phase-1/PHASE1_P1.5_SHARED_HARNESS.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-1/PHASE1_P1.5_SHARED_HARNESS_PROGRAM.md) | 1 / ready | [4](phase-1/PHASE1_P1.5_SHARED_HARNESS_TICKETS.md) |
 
 ## BINDING with unresolved findings
 
@@ -52,11 +58,17 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 - [P0.4](phase-0/PHASE0_P0.4_SIMPLIFICATION_AUDIT.md) D3 — per-agent-version `maxRecoveries` becomes one global `maxRecoveryAttempts` on the turn workflow, enforced per version only by the audit sweep (A) vs keep per-version restarts in an app-level table (B).
 - [P0.3](phase-0/PHASE0_P0.3_DBOS_FIT.md) D2 — DBOS system schema lives in the same Postgres database as Navier (schema `dbos`) so starts and messages commit with Navier rows (A) vs a separate system database (B).
 
+**Phase 1 — Runner seam**
+
+- [P1.1](phase-1/PHASE1_P1.1_RUNNER_INTERFACE.md) D4 — a turn belongs to DBOS iff `dbos.workflow_status` has its workflow id; no new column (A) vs a `runner` column on the agent message (B).
+- [P1.3](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE.md) D4 — retire Temporal when no non-terminal Temporal turn exists for 14 days and the owner signs off (A) vs keep the adapter indefinitely as a supported fallback (B).
+- [P1.5](phase-1/PHASE1_P1.5_SHARED_HARNESS.md) D1 — one conformance suite asserting only rows, run on both runners (A) vs separate per-runner suites (B).
+
 ## Decision log
 
 | Date | Decision | Picked by | Status |
 |------|----------|-----------|--------|
-| 2026-11-04 | Design-only project; phases 0–0, 4 units, three artifacts each | owner request (pt151u) | recorded |
+| 2026-11-04 | Design-only project; phases 0–1, 9 units, three artifacts each | owner request (pt151u) | recorded |
 | 2026-11-04 | DBOS is the only maintained runner; Temporal frozen behind the runner seam (compiles, passes its tests, no new work) | owner | recorded |
 | 2026-11-04 | No Vercel AI SDK in the runner; `llm/` ModelAdapter unchanged | owner (pt151u) | recorded |
 | 2026-11-04 | Keep Postgres delta table + SSE hub; worker long-lived outside Vercel; keep tables, drain Temporal | owner | recorded |
@@ -65,3 +77,6 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 | 2026-11-04 | [P0.4](phase-0/PHASE0_P0.4_SIMPLIFICATION_AUDIT.md) D1 — minimum rule: delete every piece whose only job is to cover a Temporal gap DBOS closes, keep product behaviour (A) vs port the Temporal machinery 1:1 onto DBOS first and simplify later (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P0.4](phase-0/PHASE0_P0.4_SIMPLIFICATION_AUDIT.md) D3 — per-agent-version `maxRecoveries` becomes one global `maxRecoveryAttempts` on the turn workflow, enforced per version only by the audit sweep (A) vs keep per-version restarts in an app-level table (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P0.3](phase-0/PHASE0_P0.3_DBOS_FIT.md) D2 — DBOS system schema lives in the same Postgres database as Navier (schema `dbos`) so starts and messages commit with Navier rows (A) vs a separate system database (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P1.1](phase-1/PHASE1_P1.1_RUNNER_INTERFACE.md) D4 — a turn belongs to DBOS iff `dbos.workflow_status` has its workflow id; no new column (A) vs a `runner` column on the agent message (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P1.3](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE.md) D4 — retire Temporal when no non-terminal Temporal turn exists for 14 days and the owner signs off (A) vs keep the adapter indefinitely as a supported fallback (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P1.5](phase-1/PHASE1_P1.5_SHARED_HARNESS.md) D1 — one conformance suite asserting only rows, run on both runners (A) vs separate per-runner suites (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
