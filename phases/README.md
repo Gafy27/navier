@@ -1,6 +1,6 @@
 # Phases — plan, status, decision log
 
-This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every phase, the status of every unit, the cross-phase documents, and the decisions the owner still has to make. Designs are written; **this repository holds no product code** — tickets apply to the Navier repository. Every unit is BINDING by owner request (pt151u, 2026-11-04), 1 of them with review findings still open.
+This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every phase, the status of every unit, the cross-phase documents, and the decisions the owner still has to make. Designs are written; **this repository holds no product code** — tickets apply to the Navier repository. Every unit is BINDING by owner request (pt151u, 2026-11-04), 3 of them with review findings still open.
 
 ## Phases
 
@@ -8,6 +8,7 @@ This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every ph
 |-------|------|-----------|-------|
 | [phase-0](phase-0/README.md) | Research and map | Map how one Navier turn runs today, what Temporal provides, what each piece of surrounding machinery is for, how DBOS covers each need, and give every piece a keep / replace-by-DBOS / delete / simplify verdict. | P0.1, P0.2, P0.3, P0.4 |
 | [phase-1](phase-1/README.md) | Runner seam | Put one small `TurnRunner` interface between Navier's domain code and the runner, move every Temporal-specific file behind it unchanged and frozen, and prove both runners with one shared conformance harness. | P1.1, P1.2, P1.3, P1.4, P1.5 |
+| [phase-2](phase-2/README.md) | DBOS turn workflow | Run one Navier turn as one DBOS workflow on the same Postgres: steps with retries and timeouts, stop and interrupt that abort the in-flight call, approvals that wait in `recv` with the pause deadline, and a start that commits with the rows. | P2.1, P2.2, P2.3, P2.4, P2.5 |
 
 ## Where the owner goals live
 
@@ -35,10 +36,17 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 | P1.3 | [Temporal as a frozen adapter](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 3](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE_PROGRAM.md) | 3 / ready | [4](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE_TICKETS.md) |
 | P1.4 | [Runner configuration and selection](phase-1/PHASE1_P1.4_RUNNER_CONFIG.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 1](phase-1/PHASE1_P1.4_RUNNER_CONFIG_PROGRAM.md) | 1 / ready | [2](phase-1/PHASE1_P1.4_RUNNER_CONFIG_TICKETS.md) |
 | P1.5 | [Shared runner conformance harness](phase-1/PHASE1_P1.5_SHARED_HARNESS.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-1/PHASE1_P1.5_SHARED_HARNESS_PROGRAM.md) | 1 / ready | [4](phase-1/PHASE1_P1.5_SHARED_HARNESS_TICKETS.md) |
+| P2.1 | [The DBOS turn workflow](phase-2/PHASE2_P2.1_TURN_WORKFLOW.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 2](phase-2/PHASE2_P2.1_TURN_WORKFLOW_PROGRAM.md) | 2 / ready | [4](phase-2/PHASE2_P2.1_TURN_WORKFLOW_TICKETS.md) |
+| P2.2 | [Steps, retries, timeouts and the attempt source](phase-2/PHASE2_P2.2_STEPS_RETRIES.md) | BINDING through pass 3 | 3 / ready | [BINDING through pass 1](phase-2/PHASE2_P2.2_STEPS_RETRIES_PROGRAM.md) | 1 / ready | [4](phase-2/PHASE2_P2.2_STEPS_RETRIES_TICKETS.md) |
+| P2.3 | [Stop, interrupt and graceful stop on DBOS](phase-2/PHASE2_P2.3_STOP_INTERRUPT.md) | BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04 | 3 / not-ready | [BINDING through pass 1](phase-2/PHASE2_P2.3_STOP_INTERRUPT_PROGRAM.md) | 1 / ready | [4](phase-2/PHASE2_P2.3_STOP_INTERRUPT_TICKETS.md) |
+| P2.4 | [Approval and pause as a durable wait](phase-2/PHASE2_P2.4_APPROVAL_PAUSE.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-2/PHASE2_P2.4_APPROVAL_PAUSE_PROGRAM.md) | 1 / ready | [3](phase-2/PHASE2_P2.4_APPROVAL_PAUSE_TICKETS.md) |
+| P2.5 | [Atomic start, exactly-once writes, versioning and the replay-test replacement](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) | BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04 | 3 / not-ready | [BINDING through pass 2](phase-2/PHASE2_P2.5_EXACTLY_ONCE_PROGRAM.md) | 2 / ready | [4](phase-2/PHASE2_P2.5_EXACTLY_ONCE_TICKETS.md) |
 
 ## BINDING with unresolved findings
 
 - **P0.4 Simplification audit of the machinery around the turn workflow**: architecture R3-F1, R3-F2 — see `phase-0/reviews/`.
+- **P2.3 Stop, interrupt and graceful stop on DBOS**: architecture R3-F1, R3-F2 — see `phase-2/reviews/`.
+- **P2.5 Atomic start, exactly-once writes, versioning and the replay-test replacement**: architecture R3-F1, R3-F2 — see `phase-2/reviews/`.
 
 ## Cross-phase documents
 
@@ -64,11 +72,19 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 - [P1.3](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE.md) D4 — retire Temporal when no non-terminal Temporal turn exists for 14 days and the owner signs off (A) vs keep the adapter indefinitely as a supported fallback (B).
 - [P1.5](phase-1/PHASE1_P1.5_SHARED_HARNESS.md) D1 — one conformance suite asserting only rows, run on both runners (A) vs separate per-runner suites (B).
 
+**Phase 2 — DBOS turn workflow**
+
+- [P2.1](phase-2/PHASE2_P2.1_TURN_WORKFLOW.md) D2 — queue `turns` partitioned by thread with `partitionConcurrency: 1` (A) vs no queue, direct start (B).
+- [P2.3](phase-2/PHASE2_P2.3_STOP_INTERRUPT.md) D1 — stop = `stop_requested` row + `dbos.send_message` + `NOTIFY` to a worker abort hub, all in the API transaction (A) vs `DBOS.cancelWorkflow` (B) vs worker polling only (C).
+- [P2.4](phase-2/PHASE2_P2.4_APPROVAL_PAUSE.md) D1 — a paused turn keeps its workflow alive in `recv` until the decision or `expires_at` (A) vs end the workflow and start a new one with a suffixed id on decide (B).
+- [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D1 — start by `SELECT dbos.enqueue_workflow(...)` inside the post transaction (A) vs `DBOSClient.enqueueInTransaction` (B) vs enqueue after commit + audit sweep (C).
+- [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D7 — steps keep Navier's own `withTransaction` (A) vs DBOS `KyselyDataSource` transactions for finish/pause (B).
+
 ## Decision log
 
 | Date | Decision | Picked by | Status |
 |------|----------|-----------|--------|
-| 2026-11-04 | Design-only project; phases 0–1, 9 units, three artifacts each | owner request (pt151u) | recorded |
+| 2026-11-04 | Design-only project; phases 0–2, 14 units, three artifacts each | owner request (pt151u) | recorded |
 | 2026-11-04 | DBOS is the only maintained runner; Temporal frozen behind the runner seam (compiles, passes its tests, no new work) | owner | recorded |
 | 2026-11-04 | No Vercel AI SDK in the runner; `llm/` ModelAdapter unchanged | owner (pt151u) | recorded |
 | 2026-11-04 | Keep Postgres delta table + SSE hub; worker long-lived outside Vercel; keep tables, drain Temporal | owner | recorded |
@@ -80,3 +96,8 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 | 2026-11-04 | [P1.1](phase-1/PHASE1_P1.1_RUNNER_INTERFACE.md) D4 — a turn belongs to DBOS iff `dbos.workflow_status` has its workflow id; no new column (A) vs a `runner` column on the agent message (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P1.3](phase-1/PHASE1_P1.3_TEMPORAL_FREEZE.md) D4 — retire Temporal when no non-terminal Temporal turn exists for 14 days and the owner signs off (A) vs keep the adapter indefinitely as a supported fallback (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P1.5](phase-1/PHASE1_P1.5_SHARED_HARNESS.md) D1 — one conformance suite asserting only rows, run on both runners (A) vs separate per-runner suites (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P2.1](phase-2/PHASE2_P2.1_TURN_WORKFLOW.md) D2 — queue `turns` partitioned by thread with `partitionConcurrency: 1` (A) vs no queue, direct start (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P2.3](phase-2/PHASE2_P2.3_STOP_INTERRUPT.md) D1 — stop = `stop_requested` row + `dbos.send_message` + `NOTIFY` to a worker abort hub, all in the API transaction (A) vs `DBOS.cancelWorkflow` (B) vs worker polling only (C). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P2.4](phase-2/PHASE2_P2.4_APPROVAL_PAUSE.md) D1 — a paused turn keeps its workflow alive in `recv` until the decision or `expires_at` (A) vs end the workflow and start a new one with a suffixed id on decide (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D1 — start by `SELECT dbos.enqueue_workflow(...)` inside the post transaction (A) vs `DBOSClient.enqueueInTransaction` (B) vs enqueue after commit + audit sweep (C). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D7 — steps keep Navier's own `withTransaction` (A) vs DBOS `KyselyDataSource` transactions for finish/pause (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
