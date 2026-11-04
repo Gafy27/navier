@@ -13,6 +13,7 @@ This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every ph
 | [phase-4](phase-4/README.md) | authz-engine | Replace Navier's gRPC `cosmos.authz.v1` client and everything that depends on it with the owner's authz-engine behind one `NavierAuthz` seam: a Navier model, transaction-bound identity in DBOS steps, a shadow-checked cutover with rollback, then removal of the old client. | P4.1, P4.2, P4.3, P4.4, P4.5 |
 | [phase-5](phase-5/README.md) | Migration and cutover | Move new turns to DBOS org by org while in-flight Temporal turns drain on Temporal, with tables unchanged, a one-flag rollback for new turns, and a runbook that also sequences the authz cutover. | P5.1, P5.2, P5.3, P5.4 |
 | [phase-6](phase-6/README.md) | Operations | Run the DBOS worker as a long-lived process outside Vercel with stable executor identity, bounded queues, OpenTelemetry, a failure-mode table, and load and chaos tests that close the latency questions left by phase 2. | P6.1, P6.2, P6.3, P6.4, P6.5 |
+| [phase-7](phase-7/README.md) | Hardening, open-source readiness and cleanup | Replace the Temporal replay tests with a DBOS test matrix, close the security items deferred from phases 2–6, make Navier ready to publish (pluggable authz with authz-engine as default, license, quickstart, supported workflows), and delete what the migration made dead. | P7.1, P7.2, P7.3, P7.4 |
 
 ## Where the owner goals live
 
@@ -63,6 +64,10 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 | P6.3 | [Traces, metrics and alerts](phase-6/PHASE6_P6.3_OBSERVABILITY.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-6/PHASE6_P6.3_OBSERVABILITY_PROGRAM.md) | 2 / ready | [3](phase-6/PHASE6_P6.3_OBSERVABILITY_TICKETS.md) |
 | P6.4 | [Failure-mode table](phase-6/PHASE6_P6.4_FAILURE_MODES.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-6/PHASE6_P6.4_FAILURE_MODES_PROGRAM.md) | 1 / ready | [2](phase-6/PHASE6_P6.4_FAILURE_MODES_TICKETS.md) |
 | P6.5 | [Load and chaos tests](phase-6/PHASE6_P6.5_LOAD_CHAOS.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-6/PHASE6_P6.5_LOAD_CHAOS_PROGRAM.md) | 1 / ready | [3](phase-6/PHASE6_P6.5_LOAD_CHAOS_TICKETS.md) |
+| P7.1 | [DBOS test matrix](phase-7/PHASE7_P7.1_TEST_MATRIX.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-7/PHASE7_P7.1_TEST_MATRIX_PROGRAM.md) | 1 / ready | [3](phase-7/PHASE7_P7.1_TEST_MATRIX_TICKETS.md) |
+| P7.2 | [Security review](phase-7/PHASE7_P7.2_SECURITY_REVIEW.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 3](phase-7/PHASE7_P7.2_SECURITY_REVIEW_PROGRAM.md) | 3 / ready | [4](phase-7/PHASE7_P7.2_SECURITY_REVIEW_TICKETS.md) |
+| P7.3 | [Open-source readiness](phase-7/PHASE7_P7.3_OSS_READINESS.md) | BINDING through pass 3 | 3 / ready | [BINDING through pass 1](phase-7/PHASE7_P7.3_OSS_READINESS_PROGRAM.md) | 1 / ready | [4](phase-7/PHASE7_P7.3_OSS_READINESS_TICKETS.md) |
+| P7.4 | [Temporal retirement and dead-code removal](phase-7/PHASE7_P7.4_DEAD_CODE.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-7/PHASE7_P7.4_DEAD_CODE_PROGRAM.md) | 1 / ready | [4](phase-7/PHASE7_P7.4_DEAD_CODE_TICKETS.md) |
 
 ## BINDING with unresolved findings
 
@@ -131,11 +136,18 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 - [P6.2](phase-6/PHASE6_P6.2_SCALING_QUEUES.md) D1 — one `turns` queue partitioned by thread with `partitionConcurrency: 1` and `workerConcurrency` sized per pod (A) vs one queue per org (B).
 - [P6.3](phase-6/PHASE6_P6.3_OBSERVABILITY.md) D1 — DBOS OTLP traces with `workflowAttributes` {org, traceId} plus Navier pino logs unchanged (A) vs a custom tracing wrapper (B).
 
+**Phase 7 — Hardening, open-source readiness and cleanup**
+
+- [P7.3](phase-7/PHASE7_P7.3_OSS_READINESS.md) D2 — license: Apache-2.0 for Navier, matching authz-engine and compatible with the MIT DBOS SDK (A) vs MIT (B).
+- [P7.3](phase-7/PHASE7_P7.3_OSS_READINESS.md) D1 — authz is pluggable through `NavierAuthz` with authz-engine as the default and only bundled adapter; other adapters must pass the conformance suite (A) vs bundle a second adapter (B).
+- [P7.4](phase-7/PHASE7_P7.4_DEAD_CODE.md) D3 — after retirement, stop writing `step_claim` and `recovery` and keep the tables read-only until the owner approves a drop (A) vs drop them in the retirement release (B).
+- [P7.2](phase-7/PHASE7_P7.2_SECURITY_REVIEW.md) D1 — application role gets only EXECUTE on `dbos.enqueue_workflow` and `dbos.send_message` plus SELECT on `dbos.workflow_status`; DDL only for the migration role (A) vs application role owns the `dbos` schema (B).
+
 ## Decision log
 
 | Date | Decision | Picked by | Status |
 |------|----------|-----------|--------|
-| 2026-11-04 | Design-only project; phases 0–6, 32 units, three artifacts each | owner request (pt151u) | recorded |
+| 2026-11-04 | Design-only project; phases 0–7, 36 units, three artifacts each | owner request (pt151u) | recorded |
 | 2026-11-04 | DBOS is the only maintained runner; Temporal frozen behind the runner seam (compiles, passes its tests, no new work) | owner | recorded |
 | 2026-11-04 | No Vercel AI SDK in the runner; `llm/` ModelAdapter unchanged | owner (pt151u) | recorded |
 | 2026-11-04 | Keep Postgres delta table + SSE hub; worker long-lived outside Vercel; keep tables, drain Temporal | owner | recorded |
@@ -167,3 +179,7 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 | 2026-11-04 | [P6.1](phase-6/PHASE6_P6.1_WORKER_DEPLOYMENT.md) D2 — stable executor IDs per worker slot (StatefulSet-style ordinal) so a restarted slot recovers its own workflows (A) vs DBOS Conductor-driven recovery (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P6.2](phase-6/PHASE6_P6.2_SCALING_QUEUES.md) D1 — one `turns` queue partitioned by thread with `partitionConcurrency: 1` and `workerConcurrency` sized per pod (A) vs one queue per org (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P6.3](phase-6/PHASE6_P6.3_OBSERVABILITY.md) D1 — DBOS OTLP traces with `workflowAttributes` {org, traceId} plus Navier pino logs unchanged (A) vs a custom tracing wrapper (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P7.3](phase-7/PHASE7_P7.3_OSS_READINESS.md) D2 — license: Apache-2.0 for Navier, matching authz-engine and compatible with the MIT DBOS SDK (A) vs MIT (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P7.3](phase-7/PHASE7_P7.3_OSS_READINESS.md) D1 — authz is pluggable through `NavierAuthz` with authz-engine as the default and only bundled adapter; other adapters must pass the conformance suite (A) vs bundle a second adapter (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P7.4](phase-7/PHASE7_P7.4_DEAD_CODE.md) D3 — after retirement, stop writing `step_claim` and `recovery` and keep the tables read-only until the owner approves a drop (A) vs drop them in the retirement release (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P7.2](phase-7/PHASE7_P7.2_SECURITY_REVIEW.md) D1 — application role gets only EXECUTE on `dbos.enqueue_workflow` and `dbos.send_message` plus SELECT on `dbos.workflow_status`; DDL only for the migration role (A) vs application role owns the `dbos` schema (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |

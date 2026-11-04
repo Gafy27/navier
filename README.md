@@ -34,7 +34,35 @@ What goes away on the DBOS path: reaper restarts, the recovery table writes, `st
 
 ## Authz is pluggable (open-source plan)
 
-Navier talks to authorization only through the `NavierAuthz` seam ([P4.1](phases/phase-4/PHASE4_P4.1_AUTHZ_SEAM.md)). In the open-source plan that seam is the plug point: **authz-engine is the default implementation** (Postgres-native, five verbs `check` / `list` / `explain` / `write` / `tx`, `provision()`, transaction-bound identity, fail-closed, AZ error catalogue), and another engine can be supplied by implementing the seam and passing the conformance scenarios of [P4.2](phases/phase-4/PHASE4_P4.2_NAVIER_MODEL.md). The legacy gRPC adapter exists only until the authz cutover ([P4.4](phases/phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md), [P4.5](phases/phase-4/PHASE4_P4.5_GRPC_REMOVAL.md)).
+Navier talks to authorization only through the `NavierAuthz` seam ([P4.1](phases/phase-4/PHASE4_P4.1_AUTHZ_SEAM.md)). In the open-source plan that seam is the plug point: **authz-engine is the default implementation** (Postgres-native, five verbs `check` / `list` / `explain` / `write` / `tx`, `provision()`, transaction-bound identity, fail-closed, AZ error catalogue), and another engine can be supplied by implementing the seam and passing the conformance scenarios of [P4.2](phases/phase-4/PHASE4_P4.2_NAVIER_MODEL.md), packaged as `navier-authz-conformance` ([P7.3](phases/phase-7/PHASE7_P7.3_OSS_READINESS.md) D1). There is no allow-all adapter. The legacy gRPC adapter exists only until the authz cutover ([P4.4](phases/phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md), [P4.5](phases/phase-4/PHASE4_P4.5_GRPC_REMOVAL.md)).
+
+## Open-source readiness
+
+Designed in [P7.3](phases/phase-7/PHASE7_P7.3_OSS_READINESS.md):
+
+- **Pluggable authz.** `NavierAuthz` is the public plug point. authz-engine is the default and only bundled adapter, and any other adapter must pass the conformance suite.
+- **License.** Apache-2.0 is proposed, to match authz-engine. The DBOS SDK is MIT, so the two are compatible. Navier's current license is not stated in `src` [U]. The owner decides this gate (P7.3 D2).
+- **Quickstart.** The whole quickstart runs on one Postgres and runs as a CI job:
+  1. Start Postgres.
+  2. Run `navier migrate`. This runs the Navier migrations, `DBOS.migrate` and authz-engine `provision()`.
+  3. Run `navier seed`.
+  4. Run `navier worker`.
+  5. Run `navier api`.
+  6. Post a message with the SDK and stream the reply.
+
+  No Temporal, no gRPC authz service and no external queue are needed.
+- **Supported workflows.**
+  - Chat turns with streamed deltas.
+  - Tool calls with retries and idempotency.
+  - Human approval: pause and resume.
+  - Stop (cancel) and interrupt.
+  - Pending-message promotion.
+  - Editing and retrying a message.
+  - Scheduled sweeps.
+- **Not supported.**
+  - Temporal as a maintained runner. It is a frozen adapter until it is retired.
+  - The Vercel AI SDK as the runner. This was rejected.
+  - Workers on serverless platforms.
 
 ## How the factory works here
 
@@ -52,4 +80,4 @@ Validation (tooling outside this repo, not product code): `python3 /workspace/na
 
 ## Status (2026-11-04)
 
-7 phases, 32 units, 96 unit artifacts, 99 tickets. All units BINDING by owner request; 5 carry unresolved review findings (P0.4, P2.3, P2.5, P4.4, P6.1). No owner gate has been answered yet — see [`phases/README.md`](phases/README.md#gates-for-owner).
+8 phases, 36 units, 108 unit artifacts, 114 tickets. All units BINDING by owner request; 5 carry unresolved review findings (P0.4, P2.3, P2.5, P4.4, P6.1). No owner gate has been answered yet — see [`phases/README.md`](phases/README.md#gates-for-owner).
