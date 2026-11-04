@@ -1,6 +1,6 @@
 # Phases — plan, status, decision log
 
-This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every phase, the status of every unit, the cross-phase documents, and the decisions the owner still has to make. Designs are written; **this repository holds no product code** — tickets apply to the Navier repository. Every unit is BINDING by owner request (pt151u, 2026-11-04), 4 of them with review findings still open.
+This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every phase, the status of every unit, the cross-phase documents, and the decisions the owner still has to make. Designs are written; **this repository holds no product code** — tickets apply to the Navier repository. Every unit is BINDING by owner request (pt151u, 2026-11-04), 5 of them with review findings still open.
 
 ## Phases
 
@@ -12,6 +12,7 @@ This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every ph
 | [phase-3](phase-3/README.md) | Simplification | Delete or shrink, on the DBOS path, every piece of machinery the audit marked delete / replace / simplify: claims, the recovery table and reaper restarts, the pending-promotion start, Temporal schedules, the stream sweep, and the config and migrations that only served them — without touching tables. | P3.1, P3.2, P3.3, P3.4 |
 | [phase-4](phase-4/README.md) | authz-engine | Replace Navier's gRPC `cosmos.authz.v1` client and everything that depends on it with the owner's authz-engine behind one `NavierAuthz` seam: a Navier model, transaction-bound identity in DBOS steps, a shadow-checked cutover with rollback, then removal of the old client. | P4.1, P4.2, P4.3, P4.4, P4.5 |
 | [phase-5](phase-5/README.md) | Migration and cutover | Move new turns to DBOS org by org while in-flight Temporal turns drain on Temporal, with tables unchanged, a one-flag rollback for new turns, and a runbook that also sequences the authz cutover. | P5.1, P5.2, P5.3, P5.4 |
+| [phase-6](phase-6/README.md) | Operations | Run the DBOS worker as a long-lived process outside Vercel with stable executor identity, bounded queues, OpenTelemetry, a failure-mode table, and load and chaos tests that close the latency questions left by phase 2. | P6.1, P6.2, P6.3, P6.4, P6.5 |
 
 ## Where the owner goals live
 
@@ -57,6 +58,11 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 | P5.2 | [Rollout flags and order](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS_PROGRAM.md) | 2 / ready | [2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS_TICKETS.md) |
 | P5.3 | [Rollback and compatibility](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT_PROGRAM.md) | 1 / ready | [2](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT_TICKETS.md) |
 | P5.4 | [Cutover runbook (runner and authz)](phase-5/PHASE5_P5.4_RUNBOOK.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 1](phase-5/PHASE5_P5.4_RUNBOOK_PROGRAM.md) | 1 / ready | [2](phase-5/PHASE5_P5.4_RUNBOOK_TICKETS.md) |
+| P6.1 | [Worker deployment and lifecycle](phase-6/PHASE6_P6.1_WORKER_DEPLOYMENT.md) | BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04 | 3 / not-ready | [BINDING through pass 1](phase-6/PHASE6_P6.1_WORKER_DEPLOYMENT_PROGRAM.md) | 1 / ready | [4](phase-6/PHASE6_P6.1_WORKER_DEPLOYMENT_TICKETS.md) |
+| P6.2 | [Queues, partitions and sizing](phase-6/PHASE6_P6.2_SCALING_QUEUES.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-6/PHASE6_P6.2_SCALING_QUEUES_PROGRAM.md) | 1 / ready | [2](phase-6/PHASE6_P6.2_SCALING_QUEUES_TICKETS.md) |
+| P6.3 | [Traces, metrics and alerts](phase-6/PHASE6_P6.3_OBSERVABILITY.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-6/PHASE6_P6.3_OBSERVABILITY_PROGRAM.md) | 2 / ready | [3](phase-6/PHASE6_P6.3_OBSERVABILITY_TICKETS.md) |
+| P6.4 | [Failure-mode table](phase-6/PHASE6_P6.4_FAILURE_MODES.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-6/PHASE6_P6.4_FAILURE_MODES_PROGRAM.md) | 1 / ready | [2](phase-6/PHASE6_P6.4_FAILURE_MODES_TICKETS.md) |
+| P6.5 | [Load and chaos tests](phase-6/PHASE6_P6.5_LOAD_CHAOS.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-6/PHASE6_P6.5_LOAD_CHAOS_PROGRAM.md) | 1 / ready | [3](phase-6/PHASE6_P6.5_LOAD_CHAOS_TICKETS.md) |
 
 ## BINDING with unresolved findings
 
@@ -64,6 +70,7 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 - **P2.3 Stop, interrupt and graceful stop on DBOS**: architecture R3-F1, R3-F2 — see `phase-2/reviews/`.
 - **P2.5 Atomic start, exactly-once writes, versioning and the replay-test replacement**: architecture R3-F1, R3-F2 — see `phase-2/reviews/`.
 - **P4.4 Migration and cutover from the old authz service**: program R3-F1, R3-F2 — see `phase-4/reviews/`.
+- **P6.1 Worker deployment and lifecycle**: architecture R3-F1, R3-F2 — see `phase-6/reviews/`.
 
 ## Cross-phase documents
 
@@ -118,11 +125,17 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 - [P5.2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS.md) D1 — per-org rollout with `RUNNER_TEMPORAL_ORGS` as the list of orgs still on Temporal, internal orgs first (A) vs global switch (B).
 - [P5.3](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT.md) D2 — rollback flips new turns back to Temporal; DBOS-started turns finish on DBOS (A) vs stop DBOS workers on rollback (B).
 
+**Phase 6 — Operations**
+
+- [P6.1](phase-6/PHASE6_P6.1_WORKER_DEPLOYMENT.md) D2 — stable executor IDs per worker slot (StatefulSet-style ordinal) so a restarted slot recovers its own workflows (A) vs DBOS Conductor-driven recovery (B).
+- [P6.2](phase-6/PHASE6_P6.2_SCALING_QUEUES.md) D1 — one `turns` queue partitioned by thread with `partitionConcurrency: 1` and `workerConcurrency` sized per pod (A) vs one queue per org (B).
+- [P6.3](phase-6/PHASE6_P6.3_OBSERVABILITY.md) D1 — DBOS OTLP traces with `workflowAttributes` {org, traceId} plus Navier pino logs unchanged (A) vs a custom tracing wrapper (B).
+
 ## Decision log
 
 | Date | Decision | Picked by | Status |
 |------|----------|-----------|--------|
-| 2026-11-04 | Design-only project; phases 0–5, 27 units, three artifacts each | owner request (pt151u) | recorded |
+| 2026-11-04 | Design-only project; phases 0–6, 32 units, three artifacts each | owner request (pt151u) | recorded |
 | 2026-11-04 | DBOS is the only maintained runner; Temporal frozen behind the runner seam (compiles, passes its tests, no new work) | owner | recorded |
 | 2026-11-04 | No Vercel AI SDK in the runner; `llm/` ModelAdapter unchanged | owner (pt151u) | recorded |
 | 2026-11-04 | Keep Postgres delta table + SSE hub; worker long-lived outside Vercel; keep tables, drain Temporal | owner | recorded |
@@ -151,3 +164,6 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 | 2026-11-04 | [P5.1](phase-5/PHASE5_P5.1_DRAIN_DUALRUN.md) D2 — drain only: Temporal turns (including paused ones) finish on Temporal; nothing is moved (A) vs re-enqueue paused Temporal turns on DBOS (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P5.2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS.md) D1 — per-org rollout with `RUNNER_TEMPORAL_ORGS` as the list of orgs still on Temporal, internal orgs first (A) vs global switch (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P5.3](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT.md) D2 — rollback flips new turns back to Temporal; DBOS-started turns finish on DBOS (A) vs stop DBOS workers on rollback (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P6.1](phase-6/PHASE6_P6.1_WORKER_DEPLOYMENT.md) D2 — stable executor IDs per worker slot (StatefulSet-style ordinal) so a restarted slot recovers its own workflows (A) vs DBOS Conductor-driven recovery (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P6.2](phase-6/PHASE6_P6.2_SCALING_QUEUES.md) D1 — one `turns` queue partitioned by thread with `partitionConcurrency: 1` and `workerConcurrency` sized per pod (A) vs one queue per org (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P6.3](phase-6/PHASE6_P6.3_OBSERVABILITY.md) D1 — DBOS OTLP traces with `workflowAttributes` {org, traceId} plus Navier pino logs unchanged (A) vs a custom tracing wrapper (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |

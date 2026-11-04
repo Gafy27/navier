@@ -53,7 +53,7 @@ Stop API. [pass 1]
 
 ### D4 — Code rollback only at zero DBOS drain
 
-Skew rule. [pass 1]
+Skew rule. [pass 2]
 
 ## Relevant cross-cutting concerns
 
@@ -63,5 +63,5 @@ Runbook ([P5.4](PHASE5_P5.4_RUNBOOK.md)).
 
 | Pass | Date | Status | Ids | Change | Rejected | Picked by |
 |------|------|--------|-----|--------|----------|-----------|
-| 1 | 2026-11-04 | draft (superseded by next pass) | D1, D2, D3, D4 | Initial architecture spec. Reviewed in [round 1](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-1) — VERDICT fix-then-ready. | D1: stop DBOS workers on rollback — strands turns; D3: DBOS.cancelWorkflow — no finish | delegated to designer (pt151u), recommend-A |
-| 2 | 2026-11-04 | BINDING | D1 | Review fixes for R1-F1 ([round 1](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-1)). Reviewed in [round 2](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-2) — VERDICT ready. | — | [review round 1](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-1); BINDING by owner request (pt151u) after VERDICT ready (program pass needs BINDING architecture) |
+| 1 | 2026-11-04 | draft (superseded by next pass) | D1, D2, D3 | Initial architecture spec. Reviewed in [round 1](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-1) — VERDICT fix-then-ready. | D1: stop DBOS workers on rollback — strands turns; D3: DBOS.cancelWorkflow — no finish | delegated to designer (pt151u), recommend-A |
+| 2 | 2026-11-04 | BINDING | D1 | Review fixes for R1-F1 ([round 1](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-1)). Reviewed in [round 2](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-2) — VERDICT ready. | — | [review round 1](reviews/PHASE5_P5.3_ROLLBACK_COMPAT_REVIEW.md#round-1); new D4 delegated to designer (pt151u), recommend-A; BINDING by owner request (pt151u) after VERDICT ready (program pass needs BINDING architecture) |
