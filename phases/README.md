@@ -1,6 +1,6 @@
 # Phases — plan, status, decision log
 
-This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every phase, the status of every unit, the cross-phase documents, and the decisions the owner still has to make. Designs are written; **this repository holds no product code** — tickets apply to the Navier repository. Every unit is BINDING by owner request (pt151u, 2026-11-04), 3 of them with review findings still open.
+This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every phase, the status of every unit, the cross-phase documents, and the decisions the owner still has to make. Designs are written; **this repository holds no product code** — tickets apply to the Navier repository. Every unit is BINDING by owner request (pt151u, 2026-11-04), 4 of them with review findings still open.
 
 ## Phases
 
@@ -10,6 +10,7 @@ This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every ph
 | [phase-1](phase-1/README.md) | Runner seam | Put one small `TurnRunner` interface between Navier's domain code and the runner, move every Temporal-specific file behind it unchanged and frozen, and prove both runners with one shared conformance harness. | P1.1, P1.2, P1.3, P1.4, P1.5 |
 | [phase-2](phase-2/README.md) | DBOS turn workflow | Run one Navier turn as one DBOS workflow on the same Postgres: steps with retries and timeouts, stop and interrupt that abort the in-flight call, approvals that wait in `recv` with the pause deadline, and a start that commits with the rows. | P2.1, P2.2, P2.3, P2.4, P2.5 |
 | [phase-3](phase-3/README.md) | Simplification | Delete or shrink, on the DBOS path, every piece of machinery the audit marked delete / replace / simplify: claims, the recovery table and reaper restarts, the pending-promotion start, Temporal schedules, the stream sweep, and the config and migrations that only served them — without touching tables. | P3.1, P3.2, P3.3, P3.4 |
+| [phase-4](phase-4/README.md) | authz-engine | Replace Navier's gRPC `cosmos.authz.v1` client and everything that depends on it with the owner's authz-engine behind one `NavierAuthz` seam: a Navier model, transaction-bound identity in DBOS steps, a shadow-checked cutover with rollback, then removal of the old client. | P4.1, P4.2, P4.3, P4.4, P4.5 |
 
 ## Where the owner goals live
 
@@ -46,12 +47,18 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 | P3.2 | [Pending messages and promotion without a lost start](phase-3/PHASE3_P3.2_PENDING_PROMOTION.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-3/PHASE3_P3.2_PENDING_PROMOTION_PROGRAM.md) | 2 / ready | [3](phase-3/PHASE3_P3.2_PENDING_PROMOTION_TICKETS.md) |
 | P3.3 | [Schedules: the turn audit sweep and the stream sweep](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS.md) | BINDING through pass 3 | 3 / ready | [BINDING through pass 1](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS_PROGRAM.md) | 1 / ready | [3](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS_TICKETS.md) |
 | P3.4 | [Schema and config inventory after simplification](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS_PROGRAM.md) | 2 / ready | [2](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS_TICKETS.md) |
+| P4.1 | [Authz seam and call-site inventory](phase-4/PHASE4_P4.1_AUTHZ_SEAM.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-4/PHASE4_P4.1_AUTHZ_SEAM_PROGRAM.md) | 1 / ready | [5](phase-4/PHASE4_P4.1_AUTHZ_SEAM_TICKETS.md) |
+| P4.2 | [Navier as an authz-engine model](phase-4/PHASE4_P4.2_NAVIER_MODEL.md) | BINDING through pass 3 | 3 / ready | [BINDING through pass 1](phase-4/PHASE4_P4.2_NAVIER_MODEL_PROGRAM.md) | 1 / ready | [3](phase-4/PHASE4_P4.2_NAVIER_MODEL_TICKETS.md) |
+| P4.3 | [Identity propagation and checks inside DBOS steps](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 2](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ_PROGRAM.md) | 2 / ready | [4](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ_TICKETS.md) |
+| P4.4 | [Migration and cutover from the old authz service](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER_PROGRAM.md) | 3 / not-ready | [5](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER_TICKETS.md) |
+| P4.5 | [Removal of the old gRPC authz client](phase-4/PHASE4_P4.5_GRPC_REMOVAL.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-4/PHASE4_P4.5_GRPC_REMOVAL_PROGRAM.md) | 1 / ready | [3](phase-4/PHASE4_P4.5_GRPC_REMOVAL_TICKETS.md) |
 
 ## BINDING with unresolved findings
 
 - **P0.4 Simplification audit of the machinery around the turn workflow**: architecture R3-F1, R3-F2 — see `phase-0/reviews/`.
 - **P2.3 Stop, interrupt and graceful stop on DBOS**: architecture R3-F1, R3-F2 — see `phase-2/reviews/`.
 - **P2.5 Atomic start, exactly-once writes, versioning and the replay-test replacement**: architecture R3-F1, R3-F2 — see `phase-2/reviews/`.
+- **P4.4 Migration and cutover from the old authz service**: program R3-F1, R3-F2 — see `phase-4/reviews/`.
 
 ## Cross-phase documents
 
@@ -92,11 +99,19 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 - [P3.3](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS.md) D1 — one scheduled turn audit sweep (every minute) replaces the reaper on the DBOS path (A) vs no sweep at all (B).
 - [P3.4](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS.md) D2 — leave `step_claim` and `recovery` tables in place, unused by DBOS, until Temporal retires (A) vs drop them at cutover (B).
 
+**Phase 4 — authz-engine**
+
+- [P4.1](phase-4/PHASE4_P4.1_AUTHZ_SEAM.md) D1 — an intent-level `NavierAuthz` seam (checks, writes, reads named in Navier terms) with authz-engine as the default implementation (A) vs calling the authz-engine SDK directly at every call site (B).
+- [P4.1](phase-4/PHASE4_P4.1_AUTHZ_SEAM.md) D5 — stop writing the `agent_principal` row; the agent principal is the authz-engine subject `agent:<org>~<id>` (A) vs keep the row as a second source (B).
+- [P4.2](phase-4/PHASE4_P4.2_NAVIER_MODEL.md) D4 — approvals stay Navier rows (`action_decision`, `approval_memory`); authz-engine decides who may decide (A) vs approvals as expiring grants (B).
+- [P4.3](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ.md) D2 — authz-engine installed in Navier's Postgres (schema `authz`) and checked inside the step's own transaction (A) vs a separate authz database (B).
+- [P4.4](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md) D2 — shadow mode: legacy decides, engine evaluated in parallel, flip per org after 7 days with zero diffs, reverse shadow for rollback (A) vs direct cutover (B).
+
 ## Decision log
 
 | Date | Decision | Picked by | Status |
 |------|----------|-----------|--------|
-| 2026-11-04 | Design-only project; phases 0–3, 18 units, three artifacts each | owner request (pt151u) | recorded |
+| 2026-11-04 | Design-only project; phases 0–4, 23 units, three artifacts each | owner request (pt151u) | recorded |
 | 2026-11-04 | DBOS is the only maintained runner; Temporal frozen behind the runner seam (compiles, passes its tests, no new work) | owner | recorded |
 | 2026-11-04 | No Vercel AI SDK in the runner; `llm/` ModelAdapter unchanged | owner (pt151u) | recorded |
 | 2026-11-04 | Keep Postgres delta table + SSE hub; worker long-lived outside Vercel; keep tables, drain Temporal | owner | recorded |
@@ -117,3 +132,8 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 | 2026-11-04 | [P3.2](phase-3/PHASE3_P3.2_PENDING_PROMOTION.md) D1 — enqueue the promoted turn inside `closeTurn`'s transaction by SQL (A) vs enqueue from workflow code after the finish step (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P3.3](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS.md) D1 — one scheduled turn audit sweep (every minute) replaces the reaper on the DBOS path (A) vs no sweep at all (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P3.4](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS.md) D2 — leave `step_claim` and `recovery` tables in place, unused by DBOS, until Temporal retires (A) vs drop them at cutover (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P4.1](phase-4/PHASE4_P4.1_AUTHZ_SEAM.md) D1 — an intent-level `NavierAuthz` seam (checks, writes, reads named in Navier terms) with authz-engine as the default implementation (A) vs calling the authz-engine SDK directly at every call site (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P4.1](phase-4/PHASE4_P4.1_AUTHZ_SEAM.md) D5 — stop writing the `agent_principal` row; the agent principal is the authz-engine subject `agent:<org>~<id>` (A) vs keep the row as a second source (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P4.2](phase-4/PHASE4_P4.2_NAVIER_MODEL.md) D4 — approvals stay Navier rows (`action_decision`, `approval_memory`); authz-engine decides who may decide (A) vs approvals as expiring grants (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P4.3](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ.md) D2 — authz-engine installed in Navier's Postgres (schema `authz`) and checked inside the step's own transaction (A) vs a separate authz database (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P4.4](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md) D2 — shadow mode: legacy decides, engine evaluated in parallel, flip per org after 7 days with zero diffs, reverse shadow for rollback (A) vs direct cutover (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
