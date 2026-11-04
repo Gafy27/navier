@@ -1,0 +1,4 @@
+rows=[{'id': 1}, {'id': 2}]
+expected="{'id': 1}\n{'id': 2}"
+actual="{'id': 1}"
+labels baseline saved: ['negative', 'negative', 'negative', 'zero', 'zero', 'positive', 'positive', 'positive']

@@ -1,0 +1,11 @@
+---
+description: Basilisk qcc rules for solver C. Source: factory/stack/c/code-style.md
+globs: "**/*.{c,h}"
+alwaysApply: false
+---
+
+# Basilisk
+
+Solver C compiles with `qcc`. Read [`../code-style.md`](../code-style.md) and
+[`../skills/basilisk/SKILL.md`](../skills/basilisk/SKILL.md) before editing a
+file that includes a Basilisk header.

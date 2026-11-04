@@ -1,0 +1,9 @@
+---
+description: When design or code uses Tokio. Source: factory/stack/rust/implementation.md
+alwaysApply: false
+---
+
+# Fast Tokio
+
+Follow [`implementation.md`](../implementation.md) (Fast Tokio). Load
+`fast-tokio` before implementing or locking a Tokio design.

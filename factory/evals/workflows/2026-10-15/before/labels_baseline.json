@@ -1,0 +1,26 @@
+{
+  "values": [
+    -100,
+    -1,
+    -0.5,
+    -0.0,
+    0,
+    0.5,
+    1,
+    100,
+    false,
+    true
+  ],
+  "labels": [
+    "negative",
+    "negative",
+    "negative",
+    "zero",
+    "zero",
+    "positive",
+    "positive",
+    "positive",
+    "zero",
+    "positive"
+  ]
+}

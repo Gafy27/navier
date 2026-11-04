@@ -1,0 +1,3 @@
+PASS labels: original baseline, empty input, and iterator
+PASS export_rows: empty, single, two, and three rows; exact separators
+PASS unique_rows: ID-only identity and first occurrence retained

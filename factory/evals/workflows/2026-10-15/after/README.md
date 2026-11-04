@@ -1,0 +1,1 @@
+A local fixture with list utilities. No decision history is available. Contract: export every input row in input order, separated by newlines with no trailing newline. labels returns negative/zero/positive in input order. No third-party services or dependencies.

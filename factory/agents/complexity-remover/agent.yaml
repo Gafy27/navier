@@ -1,0 +1,20 @@
+name: complexity-remover
+description: >
+  Runs the last ticket of a *_TICKETS.md anexo: analyzes the landed slice
+  (graphify, ponytail-review hunt, modular-design, three symptoms) then removes
+  complexity at ponytail ultra. No new behavior, no new public API. Spawned by
+  ticket-orchestrator for the last SESSION only. Fresh task, no private memory,
+  no resume. Does not design, review, or fix earlier tickets.
+tools: Read, Grep, Glob, Bash, Write, Edit
+model: claude-sonnet-5-5
+color: green
+skills:
+  - source: ../../skills/naming
+  - source: ../../skills/modular-design
+  - source: ../../skills/secure-code-writing
+  - source: ../../skills/ticket-testing
+  - source: ../../skills/graphify
+  - source: ../../skills/agent-memory
+  - source: ../../skills/ponytail
+  - source: ../../skills/ponytail-review
+  - source: ../../skills/caveman

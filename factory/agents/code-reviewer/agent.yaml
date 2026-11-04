@@ -1,0 +1,13 @@
+name: code-reviewer
+description: Reviews code for quality, security, and maintainability, and enforces the project laws in the kit's profile. Use right after code lands. Reports; never edits.
+tools: ["Read", "Grep", "Glob", "Bash"]
+model: claude-sonnet-5-5
+skills:
+  - source: ../../skills/graphify
+  - source: ../../skills/secure-code-writing
+  - source: ../../skills/safe-types-untrusted-input
+  - source: ../../skills/strong-types-and-sanitizers
+  - source: ../../skills/naming
+  - source: ../../skills/agent-memory
+  - source: ../../skills/ponytail-review
+  - source: ../../skills/caveman

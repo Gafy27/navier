@@ -1,0 +1,5 @@
+Recorded original labels: ['negative', 'negative', 'negative', 'zero', 'zero', 'positive', 'positive', 'positive', 'zero', 'positive']
+Traceback (most recent call last):
+  File "/tmp/factory-workflow-pilot.kAKdIG/baseline/project/check_records.py", line 25, in <module>
+    assert actual == expected, f"export_rows({rows!r}): expected {expected!r}, got {actual!r}"
+AssertionError: export_rows(['only']): expected 'only', got ''

@@ -1,0 +1,16 @@
+name: research
+description: >
+  Researches one design question against reference codebases and docs and writes
+  one index note using the configured index pattern,
+  then registers it in its router. Use when asked to index a tree, write or revise
+  an index note, or answer "how does <project> do X" before a design decision.
+  Does not write code or binding designs.
+tools: Read, Grep, Glob, Bash, Write, Edit
+model: claude-sonnet-5-5
+color: blue
+skills:
+  - source: ../../skills/indexing
+  - source: ../../skills/graphify
+  - source: ../../skills/firecrawl
+  - source: ../../skills/agent-memory
+  - source: ../../skills/caveman

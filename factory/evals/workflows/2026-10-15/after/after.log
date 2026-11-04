@@ -1,0 +1,3 @@
+PASS export_rows: empty, singleton, multiple, duplicate rows; exact order and separators
+PASS labels: matches captured baseline for 8 negative/zero/positive inputs; empty input
+PASS unique_rows: first occurrence per id retained

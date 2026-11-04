@@ -1,0 +1,12 @@
+name: silent-failure-hunter
+description: >
+  Reviews code for silent failures, swallowed errors, bad fallbacks, and
+  missing error propagation. Use after a diff that touches I/O, errors, or
+  catch paths. Reports; never edits.
+tools: ["Read", "Grep", "Glob", "Bash"]
+model: claude-sonnet-5-5
+color: red
+skills:
+  - source: ../../skills/graphify
+  - source: ../../skills/agent-memory
+  - source: ../../skills/caveman

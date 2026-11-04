@@ -1,0 +1,192 @@
+---
+name: indexing
+description: >
+  MUST load as the first action whenever the user asks to index a codebase,
+  write or revise index notes, or research a reference project into markdown
+  maps. Trigger: index, indexing, re-index, write an index, index note, module
+  note, index pattern, how does <project> do X, codebase map, research the
+  tree, P0 file map.
+---
+
+# Indexing
+
+**First action** when the user asks to index, write an index note, or map
+a reference tree: read this skill, then `paths.index_pattern` and
+`paths.index_template` (from `config.yaml` in the kit root).
+Do not start from a blank page. Do not design in chat and write the note
+later — the note *is* the index. Do not browse `paths.reference_trees/<project>/` cold.
+
+This is **not** `design-docs`. Binding designs stay under `paths.designs`.
+This is **not** a dump of files you opened. Compress **judgment**.
+
+## When to use
+
+- New or revised notes under `<paths.designs>/<unit>/indexing/`
+- “Index <project>”
+- “How does <project> do X?” when the output is an md note
+- Re-index, split a seed note, register a note in the unit indexing README
+
+## When not to use
+
+- Binding specs, tickets — `design-docs`
+- Reliability/security assessments — `reliability-security`
+- Implementing a ticket that only *cites* existing indexes (read the notes; do not write new ones)
+- Restyling a `ready` note unless asked; supersede instead of silent rewrite
+
+## Critical patterns
+
+1. **One question, one decision, one file.** Copy the index template. Page
+   order: Question → Overview → Official design doc (if any) → **What we
+   found** → Findings → File map + Model → Decision. Title
+   **`## What we found`** — not “How the source does it”. **Retired:** Who owns what / Sequence / Trap. The adopt/ignore
+   table is illegal before What we found and Findings. Gold notes:
+   `profile/custom/skills.md`.
+2. **Compass, not encyclopedia.** Ranked P0 (what other code references),
+   signatures in Model, not bodies. ~400 lines is a split trigger. Update the
+   unit indexing README table in the same change.
+3. **Grep local first, Firecrawl second, source wins.** Firecrawl is required
+   when writing or revising a note (intent, traps, option contracts): both
+   indexes plus workflows as evidence. It does not rank P0 and does not
+   replace `path:line`. A merged PR supersedes an issue; the checkout
+   supersedes both.
+4. **Stop** if the router already points at a note that answers the
+   question. Extend or See-also; do not twin.
+
+Write like
+[`examples.md`](examples.md).
+Law is `paths.index_pattern` — do not paste it into the note.
+
+## Workflow
+
+Own a cited answer to one question. The note records findings before a decision.
+
+1. Read the router and fix the Question to its objective. Check for an existing answer before opening source.
+2. Read named official docs, then gather evidence in `policy/indexing.md`'s pin/no-pin order. Rank P0 by references. Follow `policy/reading.md`; load only the matching evidence skills.
+3. Trace the mechanism from P0. Cite `path:line`; keep source observations, inference, and unknowns distinct. Code behavior alone does not establish author intent.
+4. Write from `paths.index_template`. Hold its page order; write Overview last and place it first. Model contains types and signatures, not bodies.
+5. Check citations and the ready criteria below. Re-read the router and register the note with one anchored edit in the same change.
+
+## Stop conditions
+
+- An existing note answers the Question: name it and propose an extension or See-also; do not create a twin.
+- Required source or tool is inaccessible: name the attempted source and gap. Keep unsupported conclusions unverified; do not invent evidence.
+- A decision would change a product lock: return the gate under `policy/decisions.md`. An index never marks a design BINDING.
+
+## Reply contract
+
+Report `Note`, `Decision`, and `Unverified or blocked` in that order. Include
+the path, the ruling with its evidence location, and unresolved gaps (or
+`none`). This is a handoff, not a second copy of the note.
+
+Verify before `ready`: Question + Overview say what the source is;
+**What we found** cites the mechanism in plain language; Findings is a
+list you would quote; the decision table comes last and names rejected
+options. Do not ship Who owns what / Sequence / Trap.
+
+## Firecrawl (required on write/revise)
+
+Not a local indexer. Use the **full** Firecrawl surface as evidence:
+developer index, research (paper) index, CLI scrape/map/crawl/search, and
+`firecrawl-workflows` when a wide sweep helps. Skip only for README-only
+edits or a synthesis that adds no new source claim. Law: `policy/firecrawl.md`.
+
+**Output constraint:** the note stays the index template. Workflows /
+`.firecrawl/` corpora are evidence — never the phase map.
+
+Load skills before inventing curl:
+
+1. Coding Question → `firecrawl-developer-index` (`firecrawl developer`)
+2. Paper Question → `firecrawl-research-index` (`firecrawl research`)
+3. Follow-through / site unknown → `firecrawl-scrape` / `firecrawl-map`
+4. Wide web or literature sweep → `firecrawl-workflows` then the named
+   workflow (deep-research, research-papers, knowledge-base, …)
+5. Index empty → `firecrawl-search`, then scrape
+
+Prefer CLI or MCP when present. HTTP fallback (keyless; send
+`Authorization: Bearer $FIRECRAWL_API_KEY` when set):
+
+```bash
+curl -sS -X POST 'https://api.firecrawl.dev/v2/search/developer' \
+  -H 'Content-Type: application/json' \
+  ${FIRECRAWL_API_KEY:+-H "Authorization: Bearer $FIRECRAWL_API_KEY"} \
+  -d '{"query":"<the Question>","k":10,"types":["issue","pull_request","readme","doc"],"passages":2}'
+```
+
+Then narrow. Scope last, not first. If `repos`/`sources` echo
+`indexed: false`, drop the scope — do not retry the same filter.
+`repos` + `sources` **union**; repository filters (`language`, `min_stars`)
+drop `doc` unless `sources` is also set. Never answer from an issue
+opening report — the merged PR is current behaviour.
+
+| Question kind | `types` | Extra |
+|---------------|---------|--------|
+| Why / known bug | `issue`, `pull_request` | then re-query the issue terms with `types:["pull_request"]` and `repos` |
+| Literal error / stack | `issue`, `pull_request` | search the string + library; strip paths/ids and retry |
+| SQL / option / default | `readme`, `doc` | if the contract moved, follow with `pull_request` |
+| How do I do X | all four | raise `passages` before `k` |
+| Version-specific | `issue`, `pull_request` | raise `passages`; read resolution + linked PR, not the opener |
+
+Repo slugs (`owner/repo`, repository half only — never a file extension). The slug of each
+reference tree is listed in `profile/custom/skills.md`, section `indexing`.
+
+Quote a passage + `url` only if it changes Overview, a Findings item, or
+Considered. Then still cite local `path:line`. Full filters:
+[`firecrawl-developer-index`](../firecrawl-developer-index/SKILL.md).
+
+| Need | Skill / command | Indexing use |
+|------|-----------------|--------------|
+| Intent, bug, option contract | `developer` | required on write/revise (coding) |
+| Papers / literature | `research` / `firecrawl-research-papers` | required when Question is a paper |
+| Hit URL right, wrong slice | `scrape` | follow-through; `--only-main-content` |
+| Docs site known, page unknown | `map --search` then `scrape` | needs auth |
+| Index empty / comparison | `search` | then scrape |
+| Wide multi-source sweep | `firecrawl-workflows` → deep-research / KB / crawl / … | evidence only; compress into the note |
+| Local PDF already in tree | `parse` | rare |
+
+MCP/CLI equivalents when those tools exist:
+
+- `firecrawl developer "<query>" --limit 10`
+- `firecrawl research "<query>"`
+- `firecrawl_developer_search(query, k?)`
+- Already doing web search: `firecrawl_search` with `categories: ["developer"]`
+- Need the whole page: `firecrawl_scrape(url)` — second call, not scrape-options on developer search
+
+## REA (when `tools.rea`)
+
+Reverse-engineering evidence for what neither the pin nor the web shows: a
+closed product's live wire (Databricks, Foundry), its front-end code, a
+shipped binary, or a HAR file. Load the `rea` skill; law is `policy/rea.md`.
+
+- Optional on any Question; **required** when the SESSION says `REA: required`.
+- Pinned CLI through Bash: `npx -y rea-agents@6.4.0 <command> --format json`.
+- Watch-only by default. Drive a browser only inside the SESSION's `REA scratch:`.
+- Ask one small, checkable question per call; check every answer against a
+  key, the evidence, and its `confidence` label (`policy/rea.md` § Ask small,
+  § Check every answer, § Limits).
+- Commit Evidence records under `indexing/evidence/<note-stem>/` only after the
+  secret check in `policy/rea.md` passes. Never commit a HAR file.
+- In the note: cite the Evidence ID plus endpoint and field names; keep
+  observed, inferred, and unknown apart. A pin's `path:line` still wins.
+
+## Industry shape
+
+Do not build a second indexer. The project's notes *are* the map. Note
+shape is `paths.index_pattern`.
+
+| Practice | What we do |
+|----------|------------|
+| Aider repo-map / PageRank | P0 = reference importance; signatures not bodies |
+| C4 / llms.txt progressive disclosure | Overview → What we found → Findings list → decision → P0 → `path:line` |
+| Diátaxis | Overview = explanation; What we found + file map = reference; Findings = the payload; decision = ADR |
+| Nygard ADR | Decision + Considered + consequences; supersede, don’t silent-rewrite |
+| Compass not encyclopedia | one question; archive dead notes; README is the curated map |
+
+## Commands
+
+```bash
+# Rank candidates (do not walk the tree)
+rg -n '<symbol>' <paths.reference_trees>/<project>/<src> | head -80
+
+# Confirm a Firecrawl claim against the pin
+rg -n '<claim>' <paths.reference_trees>/<project>/<src> | head -40
+```

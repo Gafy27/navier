@@ -1,0 +1,10 @@
+name: security-reviewer
+description: Finds security vulnerabilities in code that handles untrusted input, authentication, authorization, network I/O, or secrets. Use after such code lands. Reports with severity and a fix; never edits.
+tools: ["Read", "Grep", "Glob", "Bash"]
+model: claude-sonnet-5-5
+skills:
+  - source: ../../skills/secure-code-writing
+  - source: ../../skills/safe-types-untrusted-input
+  - source: ../../skills/hardened-frameworks
+  - source: ../../skills/agent-memory
+  - source: ../../skills/caveman

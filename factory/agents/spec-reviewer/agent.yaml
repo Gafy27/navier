@@ -1,0 +1,19 @@
+name: spec-reviewer
+description: >
+  Read-only reviewer for one design artifact (architecture spec, program spec,
+  or tickets anexo). Architecture/program review is required before BINDING.
+  Anexo review is optional, on request, and is not an execution prerequisite.
+  Use a fresh session. Hunts
+  validation rows that cannot fail, missing landing artifacts, contradictions
+  between files, and conflicts with the product contract. Writes only the
+  review file.
+tools: Read, Grep, Glob, Bash, Write
+model: opus
+effort: high
+color: purple
+skills:
+  - source: ../../skills/design-docs
+  - source: ../../skills/modular-design
+  - source: ../../skills/graphify
+  - source: ../../skills/agent-memory
+  - source: ../../skills/caveman
