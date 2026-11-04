@@ -9,6 +9,7 @@ This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every ph
 | [phase-0](phase-0/README.md) | Research and map | Map how one Navier turn runs today, what Temporal provides, what each piece of surrounding machinery is for, how DBOS covers each need, and give every piece a keep / replace-by-DBOS / delete / simplify verdict. | P0.1, P0.2, P0.3, P0.4 |
 | [phase-1](phase-1/README.md) | Runner seam | Put one small `TurnRunner` interface between Navier's domain code and the runner, move every Temporal-specific file behind it unchanged and frozen, and prove both runners with one shared conformance harness. | P1.1, P1.2, P1.3, P1.4, P1.5 |
 | [phase-2](phase-2/README.md) | DBOS turn workflow | Run one Navier turn as one DBOS workflow on the same Postgres: steps with retries and timeouts, stop and interrupt that abort the in-flight call, approvals that wait in `recv` with the pause deadline, and a start that commits with the rows. | P2.1, P2.2, P2.3, P2.4, P2.5 |
+| [phase-3](phase-3/README.md) | Simplification | Delete or shrink, on the DBOS path, every piece of machinery the audit marked delete / replace / simplify: claims, the recovery table and reaper restarts, the pending-promotion start, Temporal schedules, the stream sweep, and the config and migrations that only served them — without touching tables. | P3.1, P3.2, P3.3, P3.4 |
 
 ## Where the owner goals live
 
@@ -41,6 +42,10 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 | P2.3 | [Stop, interrupt and graceful stop on DBOS](phase-2/PHASE2_P2.3_STOP_INTERRUPT.md) | BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04 | 3 / not-ready | [BINDING through pass 1](phase-2/PHASE2_P2.3_STOP_INTERRUPT_PROGRAM.md) | 1 / ready | [4](phase-2/PHASE2_P2.3_STOP_INTERRUPT_TICKETS.md) |
 | P2.4 | [Approval and pause as a durable wait](phase-2/PHASE2_P2.4_APPROVAL_PAUSE.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-2/PHASE2_P2.4_APPROVAL_PAUSE_PROGRAM.md) | 1 / ready | [3](phase-2/PHASE2_P2.4_APPROVAL_PAUSE_TICKETS.md) |
 | P2.5 | [Atomic start, exactly-once writes, versioning and the replay-test replacement](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) | BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04 | 3 / not-ready | [BINDING through pass 2](phase-2/PHASE2_P2.5_EXACTLY_ONCE_PROGRAM.md) | 2 / ready | [4](phase-2/PHASE2_P2.5_EXACTLY_ONCE_TICKETS.md) |
+| P3.1 | [Claims and recovery off the DBOS path](phase-3/PHASE3_P3.1_CLAIMS_RECOVERY.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-3/PHASE3_P3.1_CLAIMS_RECOVERY_PROGRAM.md) | 1 / ready | [3](phase-3/PHASE3_P3.1_CLAIMS_RECOVERY_TICKETS.md) |
+| P3.2 | [Pending messages and promotion without a lost start](phase-3/PHASE3_P3.2_PENDING_PROMOTION.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-3/PHASE3_P3.2_PENDING_PROMOTION_PROGRAM.md) | 2 / ready | [3](phase-3/PHASE3_P3.2_PENDING_PROMOTION_TICKETS.md) |
+| P3.3 | [Schedules: the turn audit sweep and the stream sweep](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS.md) | BINDING through pass 3 | 3 / ready | [BINDING through pass 1](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS_PROGRAM.md) | 1 / ready | [3](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS_TICKETS.md) |
+| P3.4 | [Schema and config inventory after simplification](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS_PROGRAM.md) | 2 / ready | [2](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS_TICKETS.md) |
 
 ## BINDING with unresolved findings
 
@@ -80,11 +85,18 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 - [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D1 — start by `SELECT dbos.enqueue_workflow(...)` inside the post transaction (A) vs `DBOSClient.enqueueInTransaction` (B) vs enqueue after commit + audit sweep (C).
 - [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D7 — steps keep Navier's own `withTransaction` (A) vs DBOS `KyselyDataSource` transactions for finish/pause (B).
 
+**Phase 3 — Simplification**
+
+- [P3.1](phase-3/PHASE3_P3.1_CLAIMS_RECOVERY.md) D2 — global `maxRecoveryAttempts` 3 on the workflow, per-version lower limits enforced by the audit sweep from `recoveryAttempts` (A) vs per-version caps through one registration per limit value (B).
+- [P3.2](phase-3/PHASE3_P3.2_PENDING_PROMOTION.md) D1 — enqueue the promoted turn inside `closeTurn`'s transaction by SQL (A) vs enqueue from workflow code after the finish step (B).
+- [P3.3](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS.md) D1 — one scheduled turn audit sweep (every minute) replaces the reaper on the DBOS path (A) vs no sweep at all (B).
+- [P3.4](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS.md) D2 — leave `step_claim` and `recovery` tables in place, unused by DBOS, until Temporal retires (A) vs drop them at cutover (B).
+
 ## Decision log
 
 | Date | Decision | Picked by | Status |
 |------|----------|-----------|--------|
-| 2026-11-04 | Design-only project; phases 0–2, 14 units, three artifacts each | owner request (pt151u) | recorded |
+| 2026-11-04 | Design-only project; phases 0–3, 18 units, three artifacts each | owner request (pt151u) | recorded |
 | 2026-11-04 | DBOS is the only maintained runner; Temporal frozen behind the runner seam (compiles, passes its tests, no new work) | owner | recorded |
 | 2026-11-04 | No Vercel AI SDK in the runner; `llm/` ModelAdapter unchanged | owner (pt151u) | recorded |
 | 2026-11-04 | Keep Postgres delta table + SSE hub; worker long-lived outside Vercel; keep tables, drain Temporal | owner | recorded |
@@ -101,3 +113,7 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 | 2026-11-04 | [P2.4](phase-2/PHASE2_P2.4_APPROVAL_PAUSE.md) D1 — a paused turn keeps its workflow alive in `recv` until the decision or `expires_at` (A) vs end the workflow and start a new one with a suffixed id on decide (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D1 — start by `SELECT dbos.enqueue_workflow(...)` inside the post transaction (A) vs `DBOSClient.enqueueInTransaction` (B) vs enqueue after commit + audit sweep (C). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P2.5](phase-2/PHASE2_P2.5_EXACTLY_ONCE.md) D7 — steps keep Navier's own `withTransaction` (A) vs DBOS `KyselyDataSource` transactions for finish/pause (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P3.1](phase-3/PHASE3_P3.1_CLAIMS_RECOVERY.md) D2 — global `maxRecoveryAttempts` 3 on the workflow, per-version lower limits enforced by the audit sweep from `recoveryAttempts` (A) vs per-version caps through one registration per limit value (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P3.2](phase-3/PHASE3_P3.2_PENDING_PROMOTION.md) D1 — enqueue the promoted turn inside `closeTurn`'s transaction by SQL (A) vs enqueue from workflow code after the finish step (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P3.3](phase-3/PHASE3_P3.3_SCHEDULES_SWEEPS.md) D1 — one scheduled turn audit sweep (every minute) replaces the reaper on the DBOS path (A) vs no sweep at all (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P3.4](phase-3/PHASE3_P3.4_SCHEMA_MIGRATIONS.md) D2 — leave `step_claim` and `recovery` tables in place, unused by DBOS, until Temporal retires (A) vs drop them at cutover (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
