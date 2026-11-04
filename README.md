@@ -52,4 +52,4 @@ Validation (tooling outside this repo, not product code): `python3 /workspace/na
 
 ## Status (2026-11-04)
 
-5 phases, 23 units, 69 unit artifacts, 76 tickets. All units BINDING by owner request; 4 carry unresolved review findings (P0.4, P2.3, P2.5, P4.4). No owner gate has been answered yet — see [`phases/README.md`](phases/README.md#gates-for-owner).
+6 phases, 27 units, 81 unit artifacts, 85 tickets. All units BINDING by owner request; 4 carry unresolved review findings (P0.4, P2.3, P2.5, P4.4). No owner gate has been answered yet — see [`phases/README.md`](phases/README.md#gates-for-owner).

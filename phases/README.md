@@ -11,6 +11,7 @@ This is the plan file (`paths.plan` in `factory/config.yaml`). It lists every ph
 | [phase-2](phase-2/README.md) | DBOS turn workflow | Run one Navier turn as one DBOS workflow on the same Postgres: steps with retries and timeouts, stop and interrupt that abort the in-flight call, approvals that wait in `recv` with the pause deadline, and a start that commits with the rows. | P2.1, P2.2, P2.3, P2.4, P2.5 |
 | [phase-3](phase-3/README.md) | Simplification | Delete or shrink, on the DBOS path, every piece of machinery the audit marked delete / replace / simplify: claims, the recovery table and reaper restarts, the pending-promotion start, Temporal schedules, the stream sweep, and the config and migrations that only served them — without touching tables. | P3.1, P3.2, P3.3, P3.4 |
 | [phase-4](phase-4/README.md) | authz-engine | Replace Navier's gRPC `cosmos.authz.v1` client and everything that depends on it with the owner's authz-engine behind one `NavierAuthz` seam: a Navier model, transaction-bound identity in DBOS steps, a shadow-checked cutover with rollback, then removal of the old client. | P4.1, P4.2, P4.3, P4.4, P4.5 |
+| [phase-5](phase-5/README.md) | Migration and cutover | Move new turns to DBOS org by org while in-flight Temporal turns drain on Temporal, with tables unchanged, a one-flag rollback for new turns, and a runbook that also sequences the authz cutover. | P5.1, P5.2, P5.3, P5.4 |
 
 ## Where the owner goals live
 
@@ -52,6 +53,10 @@ Status is copied from each spec header. Rounds are independent spec-reviewer rou
 | P4.3 | [Identity propagation and checks inside DBOS steps](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 2](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ_PROGRAM.md) | 2 / ready | [4](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ_TICKETS.md) |
 | P4.4 | [Migration and cutover from the old authz service](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 3 — unresolved: R3-F1, R3-F2; accepted by owner request (pt151u) 2026-11-04](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER_PROGRAM.md) | 3 / not-ready | [5](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER_TICKETS.md) |
 | P4.5 | [Removal of the old gRPC authz client](phase-4/PHASE4_P4.5_GRPC_REMOVAL.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-4/PHASE4_P4.5_GRPC_REMOVAL_PROGRAM.md) | 1 / ready | [3](phase-4/PHASE4_P4.5_GRPC_REMOVAL_TICKETS.md) |
+| P5.1 | [Drain and dual-run](phase-5/PHASE5_P5.1_DRAIN_DUALRUN.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-5/PHASE5_P5.1_DRAIN_DUALRUN_PROGRAM.md) | 1 / ready | [3](phase-5/PHASE5_P5.1_DRAIN_DUALRUN_TICKETS.md) |
+| P5.2 | [Rollout flags and order](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS_PROGRAM.md) | 2 / ready | [2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS_TICKETS.md) |
+| P5.3 | [Rollback and compatibility](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT.md) | BINDING through pass 2 | 2 / ready | [BINDING through pass 1](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT_PROGRAM.md) | 1 / ready | [2](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT_TICKETS.md) |
+| P5.4 | [Cutover runbook (runner and authz)](phase-5/PHASE5_P5.4_RUNBOOK.md) | BINDING through pass 1 | 1 / ready | [BINDING through pass 1](phase-5/PHASE5_P5.4_RUNBOOK_PROGRAM.md) | 1 / ready | [2](phase-5/PHASE5_P5.4_RUNBOOK_TICKETS.md) |
 
 ## BINDING with unresolved findings
 
@@ -107,11 +112,17 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 - [P4.3](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ.md) D2 — authz-engine installed in Navier's Postgres (schema `authz`) and checked inside the step's own transaction (A) vs a separate authz database (B).
 - [P4.4](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md) D2 — shadow mode: legacy decides, engine evaluated in parallel, flip per org after 7 days with zero diffs, reverse shadow for rollback (A) vs direct cutover (B).
 
+**Phase 5 — Migration and cutover**
+
+- [P5.1](phase-5/PHASE5_P5.1_DRAIN_DUALRUN.md) D2 — drain only: Temporal turns (including paused ones) finish on Temporal; nothing is moved (A) vs re-enqueue paused Temporal turns on DBOS (B).
+- [P5.2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS.md) D1 — per-org rollout with `RUNNER_TEMPORAL_ORGS` as the list of orgs still on Temporal, internal orgs first (A) vs global switch (B).
+- [P5.3](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT.md) D2 — rollback flips new turns back to Temporal; DBOS-started turns finish on DBOS (A) vs stop DBOS workers on rollback (B).
+
 ## Decision log
 
 | Date | Decision | Picked by | Status |
 |------|----------|-----------|--------|
-| 2026-11-04 | Design-only project; phases 0–4, 23 units, three artifacts each | owner request (pt151u) | recorded |
+| 2026-11-04 | Design-only project; phases 0–5, 27 units, three artifacts each | owner request (pt151u) | recorded |
 | 2026-11-04 | DBOS is the only maintained runner; Temporal frozen behind the runner seam (compiles, passes its tests, no new work) | owner | recorded |
 | 2026-11-04 | No Vercel AI SDK in the runner; `llm/` ModelAdapter unchanged | owner (pt151u) | recorded |
 | 2026-11-04 | Keep Postgres delta table + SSE hub; worker long-lived outside Vercel; keep tables, drain Temporal | owner | recorded |
@@ -137,3 +148,6 @@ Every D and PD pick was delegated to the designer (request pt151u) and recorded 
 | 2026-11-04 | [P4.2](phase-4/PHASE4_P4.2_NAVIER_MODEL.md) D4 — approvals stay Navier rows (`action_decision`, `approval_memory`); authz-engine decides who may decide (A) vs approvals as expiring grants (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P4.3](phase-4/PHASE4_P4.3_WORKFLOW_AUTHZ.md) D2 — authz-engine installed in Navier's Postgres (schema `authz`) and checked inside the step's own transaction (A) vs a separate authz database (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
 | 2026-11-04 | [P4.4](phase-4/PHASE4_P4.4_AUTHZ_CUTOVER.md) D2 — shadow mode: legacy decides, engine evaluated in parallel, flip per org after 7 days with zero diffs, reverse shadow for rollback (A) vs direct cutover (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P5.1](phase-5/PHASE5_P5.1_DRAIN_DUALRUN.md) D2 — drain only: Temporal turns (including paused ones) finish on Temporal; nothing is moved (A) vs re-enqueue paused Temporal turns on DBOS (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P5.2](phase-5/PHASE5_P5.2_ROLLOUT_FLAGS.md) D1 — per-org rollout with `RUNNER_TEMPORAL_ORGS` as the list of orgs still on Temporal, internal orgs first (A) vs global switch (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
+| 2026-11-04 | [P5.3](phase-5/PHASE5_P5.3_ROLLBACK_COMPAT.md) D2 — rollback flips new turns back to Temporal; DBOS-started turns finish on DBOS (A) vs stop DBOS workers on rollback (B). | delegated to designer (pt151u), recommend-A | **awaiting owner** |
