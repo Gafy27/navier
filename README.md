@@ -20,7 +20,7 @@
 API tx:  insert user + agent message rows  ──┐
          SELECT dbos.enqueue_workflow(...)   ├─ one COMMIT (same Postgres, schema dbos)
                                               ┘
-worker:  turn workflow  id turn~org~thread~msg  queue "turns", partition = thread, 1 at a time
+worker:  turn workflow  id turn~org~thread~msg  queue "turns", partition key = org~thread, 1 at a time
            step loadTurn
            loop: step modelStep (retries, timeout, abort on stop)  → guarded commit + deltas
                  step toolCall × n (deterministic order)            → authz-engine check in the step's tx
@@ -81,3 +81,4 @@ Validation (tooling outside this repo, not product code): `python3 /workspace/na
 ## Status (2026-11-04)
 
 8 phases, 36 units, 108 unit artifacts, 114 tickets. All units BINDING by owner request; 5 carry unresolved review findings (P0.4, P2.3, P2.5, P4.4, P6.1). No owner gate has been answered yet — see [`phases/README.md`](phases/README.md#gates-for-owner).
+# navier
