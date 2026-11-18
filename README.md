@@ -3,7 +3,7 @@
 
   <p><strong>Durable AI agents for chat, tools and approvals, on Temporal and Postgres.</strong></p>
 
-<a href="#license"><img alt="License: not yet decided" src="https://img.shields.io/badge/license-not%20yet%20decided-lightgrey?style=for-the-badge&labelColor=000"></a>
+<a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue?style=for-the-badge&labelColor=000"></a>
 <a href="docs/README.md"><img alt="Read the docs" src="https://img.shields.io/badge/docs-read%20now-blue?style=for-the-badge&labelColor=000"></a>
 <a href="#contributing"><img alt="Contributions welcome" src="https://img.shields.io/badge/contributions-welcome-brightgreen?style=for-the-badge&labelColor=000"></a>
 
@@ -54,7 +54,7 @@ Open an issue before a large change, so the approach can be discussed first. Pul
 
 ## License
 
-The license is **not yet decided**. Until a `LICENSE` file is added, the code is not licensed for reuse.
+Navier is licensed under the [Apache License, Version 2.0](LICENSE).
 
 ## Security
 
